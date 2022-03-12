@@ -7,33 +7,15 @@ import json
 import numpy as np
 
 
-def load_data(file_dr, file_loc):
-    def create_df(dic):
-        c_names = [key for key in dic[0].keys()]
-        df = pd.DataFrame(columns=c_names)
-        i = 0
-        for elem in dic:
-            vals = []
-            for c in c_names:
-                vals.append(elem[c])
-            df.loc[i] = vals
-            i += 1
-        return df
-
-    f = open("drivers.json")
-    json_drivers = json.load(f)
-    f = open("locations.json")
-    json_locations = json.load(f)
-    df_drivers = create_df(json_drivers)
-    df_locations = create_df(json_locations)
-    # filtrar locations < 30
-    # df_locations = df_locations[df_locations.demand > 30]
-    return df_drivers, df_locations
-
-
-df_drivers, df_locations = load_data("drivers.json", "locations.json")
-
+# convert json file to df
+f = open("drivers.json")
+json_drivers = json.load(f)
+df_drivers = pd.DataFrame.from_dict(json_drivers)
 print(df_drivers)
+
+f = open("locations.json")
+json_locations = json.load(f)
+df_locations = pd.DataFrame.from_dict(json_locations)
 print(df_locations)
 
 
