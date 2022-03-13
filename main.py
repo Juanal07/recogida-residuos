@@ -5,18 +5,21 @@ import pandas as pd
 import requests
 import json
 import numpy as np
+from ortools.constraint_solver import pywrapcp, routing_enums_pb2
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 
 
 # convert json file to df
 f = open("drivers.json")
 json_drivers = json.load(f)
 df_drivers = pd.DataFrame.from_dict(json_drivers)
-print(df_drivers)
+#print(df_drivers)
 
 f = open("locations.json")
 json_locations = json.load(f)
 df_locations = pd.DataFrame.from_dict(json_locations)
-print(df_locations)
+#print(df_locations)
 
 def get_distance(lon1, lat1, lon2, lat2):
     endpoint = "http://router.project-osrm.org/route/v1/driving/"
@@ -24,7 +27,7 @@ def get_distance(lon1, lat1, lon2, lat2):
     nav_request = "{},{};{},{}?overview=false".format(lon1, lat1, lon2, lat2)
     request = endpoint + nav_request
     response = json.loads(requests.get(request).text)
-    print(request)
+    #print(request)
 
     dist = 0
     if len(response["routes"]) > 0:
@@ -33,7 +36,7 @@ def get_distance(lon1, lat1, lon2, lat2):
 
     return dist
 
-print(get_distance("13.397634","52.529407","13.428555","52.523219"))
+#print(get_distance("13.397634","52.529407","13.428555","52.523219"))
 
 def create_distance_matrix(latList, lonList):
 
@@ -79,5 +82,54 @@ def create_model(df_drivers, df_locations):
     return data
 
 
-# data = create_model(df_drivers, df_locations)
-# print(data)
+data = create_model(df_drivers, df_locations)
+print(data)
+
+def get_solution(data):
+
+  manager = pywrapcp.RoutingIndexManager(len(data['distance_matrix']),
+                                           data['num_vehicles'], data['starts'], data['ends'])
+  
+  routing = pywrapcp.RoutingModel(manager)
+
+  # Constante distancia
+  def distance_callback(from_index, to_index):
+        from_node = manager.IndexToNode(from_index)
+        to_node = manager.IndexToNode(to_index)
+        return data['distance_matrix'][from_node][to_node]
+
+  transit_callback_index = routing.RegisterTransitCallback(distance_callback)
+
+  routing.SetArcCostEvaluatorOfAllVehicles(transit_callback_index)
+
+
+  # Constante capacidad
+  def demand_callback(from_index):
+        from_node = manager.IndexToNode(from_index)
+        return data['demands'][from_node]
+
+  demand_callback_index = routing.RegisterUnaryTransitCallback(demand_callback)
+  
+  routing.AddDimensionWithVehicleCapacity(
+        demand_callback_index,
+        0,  # slack
+        data['vehicle_capacities'],  # Maximas Capacidades
+        True,  # Empezar a acumular desde 0
+        'Capacity')
+
+  # Heuristica
+  search_parameters = pywrapcp.DefaultRoutingSearchParameters()
+  search_parameters.first_solution_strategy = (
+        routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC)
+  search_parameters.local_search_metaheuristic = (
+        routing_enums_pb2.LocalSearchMetaheuristic.GUIDED_LOCAL_SEARCH)
+  search_parameters.time_limit.FromSeconds(1)
+
+  # Solucionar el problema
+  solution = routing.SolveWithParameters(search_parameters)
+
+  return (solution, manager, routing)
+
+solution, manager, routing = get_solution(data)
+
+print(solution)
