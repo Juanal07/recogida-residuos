@@ -18,63 +18,22 @@ json_locations = json.load(f)
 df_locations = pd.DataFrame.from_dict(json_locations)
 print(df_locations)
 
+def get_distance(lon1, lat1, lon2, lat2):
+    endpoint = "http://router.project-osrm.org/route/v1/driving/"
 
-def reverse_geo(lat, lon):
-    gmaps = googlemaps.Client(key=api_key)
-    geocode = gmaps.reverse_geocode((lat, lon))
-
-    loc = ""
-
-    for x in geocode[0]["address_components"]:
-        loc += x["long_name"] + " "
-
-    return loc[:-1]
-
-
-def get_route_points(lat1, lon1, lat2, lon2):
-    endpoint = "https://maps.googleapis.com/maps/api/directions/json?"
-
-    origin = reverse_geo(lat1, lon1).replace(" ", "+")
-    destination = reverse_geo(lat2, lon1).replace(" ", "+")
-
-    nav_request = "origin={}&destination={}&key={}".format(origin, destination, api_key)
+    nav_request = "{},{};{},{}?overview=false".format(lon1, lat1, lon2, lat2)
     request = endpoint + nav_request
     response = json.loads(requests.get(request).text)
-
-    route = [[lat1, lon1]]
-    if len(response["routes"]) > 0:
-
-        for x in response["routes"][0]["legs"][0]["steps"]:
-            route.append([x["end_location"]["lat"], x["end_location"]["lng"]])
-
-    route.append([lat2, lon2])
-
-    return route
-
-
-# print(get_route_points())
-
-
-def get_distance(lat1, lon1, lat2, lon2):
-    endpoint = "https://maps.googleapis.com/maps/api/directions/json?"
-
-    origin = reverse_geo(lat1, lon1).replace(" ", "+")
-    destination = reverse_geo(lat2, lon1).replace(" ", "+")
-
-    nav_request = "origin={}&destination={}&key={}".format(origin, destination, api_key)
-    request = endpoint + nav_request
-    response = json.loads(requests.get(request).text)
+    print(request)
 
     dist = 0
+    if len(response["routes"]) > 0:
 
-    if len(response["routes"]) == 0:
-        return 0
+        dist = response["routes"][0]["distance"]
 
-    for x in response["routes"][0]["legs"][0]["steps"]:
-        dist += x["distance"]["value"]
+    return dist
 
-    return dist  # metros
-
+print(get_distance("13.397634","52.529407","13.428555","52.523219"))
 
 def create_distance_matrix(latList, lonList):
 
