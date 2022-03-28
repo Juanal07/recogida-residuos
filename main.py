@@ -1,3 +1,4 @@
+import imp
 import random
 import string
 import json
@@ -8,7 +9,7 @@ import numpy as np
 from ortools.constraint_solver import pywrapcp, routing_enums_pb2
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
-
+import time
 
 # convert json file to df
 f = open("drivers.json")
@@ -21,22 +22,24 @@ json_locations = json.load(f)
 df_locations = pd.DataFrame.from_dict(json_locations)
 #print(df_locations)
 
+headers = {
+    'Accept': 'application/json, application/geo+json, application/gpx+xml, img/png; charset=utf-8',
+    'Authorization': '5b3ce3597851110001cf6248d78346ffbd314936809ae8a93c99522a',
+    'Content-Type': 'application/json; charset=utf-8'
+}
+
 def get_distance(lon1, lat1, lon2, lat2):
-    endpoint = "http://router.project-osrm.org/route/v1/driving/"
-
-    nav_request = "{},{};{},{}?overview=false".format(lon1, lat1, lon2, lat2)
-    request = endpoint + nav_request
-    response = json.loads(requests.get(request).text)
-    #print(request)
-
+    nav_request =  {"coordinates":[[lat1,lon1],[lat2,lon2]]}
+    endpoint = requests.post('https://api.openrouteservice.org/v2/directions/driving-car', json=nav_request, headers=headers)
+    response = endpoint.json()
     dist = 0
-    if len(response["routes"]) > 0:
-
-        dist = response["routes"][0]["distance"]
-
+    time.sleep(1.5)
+    if endpoint.status_code == 200:
+        dist = response["routes"][0]["summary"]["distance"]
+    print(endpoint)
     return dist
 
-#print(get_distance("13.397634","52.529407","13.428555","52.523219"))
+#print(get_distance(40.518348,-3.897235,40.519669,-3.900518))
 
 def create_distance_matrix(latList, lonList):
 
@@ -46,9 +49,12 @@ def create_distance_matrix(latList, lonList):
 
     for i in range(n):
         for j in range(i + 1, n):
-
+            print(latList[i])
+            print(lonList[i])
+            print(latList[j])
+            print(lonList[j])
             dist = get_distance(latList[i], lonList[i], latList[j], lonList[j])
-
+            print(dist)
             M[i, j] = dist
             M[j, i] = dist
 
@@ -68,6 +74,7 @@ def create_model(df_drivers, df_locations):
     data["latitudes"] = [float(lat) for lat in lat_combined]
     data["longitudes"] = [float(lng) for lng in lng_combined]
     data["distance_matrix"] = create_distance_matrix(lat_combined, lng_combined)
+    pd.DataFrame(data["distance_matrix"]).to_csv("distance_matrix.csv")
     data["demands"] = [0] * n_drivers + df_locations.demand.to_list()
     data["vehicle_capacities"] = df_drivers.capacity.to_list()
     data["num_vehicles"] = n_drivers
