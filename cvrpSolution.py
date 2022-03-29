@@ -81,7 +81,7 @@ def create_data_model():
     data['num_vehicles'] = 4
     data['depot'] = 0
     return data
-
+print(create_data_model())
 
 def print_solution(data, manager, routing, solution):
     """Prints solution on console."""

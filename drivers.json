@@ -11,7 +11,7 @@
     "id": 2,
     "license_plate": "12LOP6",
     "driver": "MANUEL",
-    "capacity": 20,
+    "capacity": 15,
     "lat": 40.526405,
     "lng": -3.893652
   },
@@ -19,7 +19,7 @@
     "id": 3,
     "license_plate": "543OPC",
     "driver": "DANIEL",
-    "capacity": 5,
+    "capacity": 15,
     "lat": 40.519163,
     "lng": -3.887558
   }
