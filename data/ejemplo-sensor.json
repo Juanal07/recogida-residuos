@@ -1,0 +1,17 @@
+{
+  "id": 1,
+  "tipo_contenedor": "organico",
+  "descripcion": "Contenedor con anchura reducida, especial para calles estrechas",
+  "lote": 3,
+  "distrito": 234,
+  "barrio": 123,
+  "tipo_via": "calle",
+  "nombre_via": "barquillo",
+  "numero_via": "5",
+  "lat": 40.520566,
+  "lng": -3.909616,
+  "volumen": 33,
+  "peso_kg": 15,
+  "bateria": 85,
+  "timestamp": 1256953732
+}
