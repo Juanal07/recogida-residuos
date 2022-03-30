@@ -1,12 +1,11 @@
 import json
 import pandas as pd
-import requests
-import json
+import requests 
+import json 
 import numpy as np
 from ortools.constraint_solver import pywrapcp, routing_enums_pb2
-import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
-import time
+
+api_key = "AIzaSyAMot24WThCTr8aJCBRlvLzrUrrmqhKLlM"
 
 # convert json file to df
 f = open("drivers.json")
@@ -18,8 +17,6 @@ f = open("locations.json")
 json_locations = json.load(f)
 df_locations = pd.DataFrame.from_dict(json_locations)
 #print(df_locations)
-
-#api_key="AIzaSyAMot24WThCTr8aJCBRlvLzrUrrmqhKLlM"
 
 def get_distance(lat1, lon1, lat2, lon2):
   endpoint = 'https://maps.googleapis.com/maps/api/directions/json?'
@@ -54,23 +51,16 @@ def get_route_points(lat1, lon1, lat2, lon2):
     route.append([lat2, lon2])
     return route
 
-#print(get_route_points(40.518348,-3.897235,40.519669,-3.900518))
-#print(get_distance(40.518348,-3.897235,40.519669,-3.900518))
-
 def create_distance_matrix(latList, lonList):
 
     n = len(latList)
-
-    M = np.zeros(shape=(n, n))
+    M = np.zeros(shape=(n,n))
 
     for i in range(n):
         for j in range(i + 1, n):
-            #print(latList[i])
-            #print(lonList[i])
-            #print(latList[j])
-            #print(lonList[j])
-            dist = get_distance(latList[i], lonList[i], latList[j], lonList[j])
-            #print(dist)
+          
+            dist = get_distance(latList[i],lonList[i],latList[j],lonList[j])
+            
             M[i, j] = dist
             M[j, i] = dist
 
@@ -78,32 +68,33 @@ def create_distance_matrix(latList, lonList):
 
 def create_model(df_drivers, df_locations):
 
-    ## multidepot
+  ## multidepot
 
-    n_drivers = df_drivers.shape[0]
+  n_drivers = df_drivers.shape[0]
+  
+  lng_combined = df_drivers.lng.to_list()  + df_locations.lng.to_list()
+  lat_combined = df_drivers.lat.to_list() + df_locations.lat.to_list()
 
-    lng_combined = df_drivers.lng.to_list() + df_locations.lng.to_list()
-    lat_combined = df_drivers.lat.to_list() + df_locations.lat.to_list()
+  data = {}
+  data['latitudes'] = [ float(lat) for lat in lat_combined ]
+  data['longitudes'] = [ float(lng) for lng in lng_combined ]
+  #data["distance_matrix"] = pd.read_csv('distance_matrix_final_py.csv', sep=',', header=None).values.tolist()
+  data["distance_matrix"] = create_distance_matrix(lat_combined, lng_combined)
+  print(data["distance_matrix"])
+  pd.DataFrame(data["distance_matrix"]).to_csv("distance_matrix_final_py.csv", header=None, index=False)
+  data['demands'] = [0]*n_drivers + df_locations.demand.to_list()
+  data['vehicle_capacities'] = df_drivers.capacity.to_list()
+  data['num_vehicles'] = n_drivers
+  data['depot'] = 0
 
-    data = {}
-    data["latitudes"] = [float(lat) for lat in lat_combined]
-    data["longitudes"] = [float(lng) for lng in lng_combined]
-    data["distance_matrix"] = pd.read_csv('distance_matrix_google.csv', sep=',', header=None).values.tolist()
-    #data["distance_matrix"] = create_distance_matrix(lat_combined, lng_combined)
-    #pd.DataFrame(data["distance_matrix"]).to_csv("distance_matrix_google.csv", header=None, index=False)
-    data["demands"] = [0] * n_drivers + df_locations.demand.to_list()
-    data["vehicle_capacities"] = df_drivers.capacity.to_list()
-    data["num_vehicles"] = n_drivers
-    data["depot"] = 0
 
-    data["starts"] = []
-    data["ends"] = []
-    for i in range(n_drivers):
-        data["starts"].append(i)
-        data["ends"].append(i)
+  data['starts'] = []
+  data['ends'] = []
+  for i in range(n_drivers):
+    data['starts'].append(i)
+    data['ends'].append(i)
 
-    return data
-
+  return data
 
 data = create_model(df_drivers, df_locations)
 print(data)
@@ -112,7 +103,7 @@ def get_solution(data):
 
   manager = pywrapcp.RoutingIndexManager(len(data['distance_matrix']),
                                            data['num_vehicles'], data['starts'], data['ends'])
-  
+
   routing = pywrapcp.RoutingModel(manager)
 
   # Constante distancia
@@ -150,125 +141,7 @@ def get_solution(data):
 
   # Solucionar el problema
   solution = routing.SolveWithParameters(search_parameters)
-
+  print(f'Objective: {solution.ObjectiveValue()}')
   return (solution, manager, routing)
 
 solution, manager, routing = get_solution(data)
-
-def get_full_route_2(data, manager, routing, solution, df_drivers):
-    
-    answer = []
-    all_routes = []
-    for vehicle_id in range(data['num_vehicles']):
-        index = routing.Start(vehicle_id)
-        plan_output = 'Ruta del vehiculo {}:\n'.format(vehicle_id)
-        # id, distance, license_plate, driver, route(matrix)
-        
-        route = []
-        lon = df_drivers.lng[vehicle_id]
-        lat =  df_drivers.lat[vehicle_id]
-
-        route_distance = 0
-        route_load = 0
-
-        plan_output = ""
-        while not routing.IsEnd(index):
-            node_index = manager.IndexToNode(index)
-            route_load += data['demands'][node_index]
-
-            lon = data['longitudes'][node_index]
-            lat = data['latitudes'][node_index]
-            route.append([ lat, lon ])
-
-            plan_output += ' {0} Carga({1}) -> '.format(node_index, route_load)
-            previous_index = index
-            index = solution.Value(routing.NextVar(index))
-            route_distance += routing.GetArcCostForVehicle(previous_index, index, vehicle_id)
-    
-        plan_output += ' {0} Carga({1})\n'.format(manager.IndexToNode(index), route_load)
-        
-        lon = data['longitudes'][manager.IndexToNode(index)]
-        lat = data['latitudes'][manager.IndexToNode(index)]
-        
-        print(plan_output)
-
-        route.append([lat, lon])   
-        
-        full_route = []
-
-        for i in range(len(route) - 1):
-            full_route+= get_route_points(route[i][0], route[i][1], route[i+1][0], route[i+1][1])
-        all_routes.append(full_route)
-
-        elem = {
-            'id': df_drivers.id[vehicle_id],
-            'distance' : route_distance,
-            'license_plate' : df_drivers.license_plate[vehicle_id],
-            'route': full_route
-        }
-
-        answer.append(elem)
-    pd.DataFrame(all_routes).to_csv('route_points.csv', header=None, index=False)
-    return answer
-
-def get_full_route(data, manager, routing, solution, df_drivers):
-    print(f'Objective: {solution.ObjectiveValue()}')
-    total_distance = 0
-    total_load = 0
-    answer = []
-    all_routes= pd.read_csv('route_points.csv', sep=',', header=None).values.tolist()
-    for vehicle_id in range(data['num_vehicles']):
-        index = routing.Start(vehicle_id)
-        plan_output = 'Ruta del vehiculo {}:\n'.format(vehicle_id)
-        # id, distance, license_plate, driver, route(matrix)
-        
-        route = []
-        lon = df_drivers.lng[vehicle_id]
-        lat =  df_drivers.lat[vehicle_id]
-
-        route_distance = 0
-        route_load = 0
-
-        while not routing.IsEnd(index):
-            node_index = manager.IndexToNode(index)
-            route_load += data['demands'][node_index]
-
-            lon = data['longitudes'][node_index]
-            lat = data['latitudes'][node_index]
-            route.append([ lat, lon ])
-
-            plan_output += ' {0} Carga({1}) -> '.format(node_index, route_load)
-            previous_index = index
-            index = solution.Value(routing.NextVar(index))
-            route_distance += routing.GetArcCostForVehicle(previous_index, index, vehicle_id)
-    
-        plan_output += ' {0} Carga({1})\n'.format(manager.IndexToNode(index), route_load)
-        plan_output += 'Distance of the route: {}m\n'.format(route_distance)
-        plan_output += 'Load of the route: {}\n'.format(route_load)
-        
-        lon = data['longitudes'][manager.IndexToNode(index)]
-        lat = data['latitudes'][manager.IndexToNode(index)]
-        
-        total_distance += route_distance
-        total_load += route_load
-        print(plan_output)
-
-        route.append([lat, lon])   
-
-        elem = {
-            'id': df_drivers.id[vehicle_id],
-            'distance' : route_distance,
-            'license_plate' : df_drivers.license_plate[vehicle_id],
-            'route': all_routes[vehicle_id]
-        }
-
-        answer.append(elem)
-    print('Total distance of all routes: {}m'.format(total_distance))
-    print('Total load of all routes: {}'.format(total_load))
-    return answer
-
-if solution :
-  answer = get_full_route(data,manager,routing,solution,df_drivers)
-
-for x in answer:
-  print(x)

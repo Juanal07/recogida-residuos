@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "license_plate": "123BC",
+    "driver": "JUAN",
+    "capacity": 15,
+    "lat": 40.520566,
+    "lng": -3.909616
+  },
+  {
+    "id": 2,
+    "license_plate": "12LOP6",
+    "driver": "MANUEL",
+    "capacity": 15,
+    "lat": 40.526405,
+    "lng": -3.893652
+  },
+  {
+    "id": 3,
+    "license_plate": "543OPC",
+    "driver": "DANIEL",
+    "capacity": 15,
+    "lat": 40.519163,
+    "lng": -3.887558
+  }
+]
