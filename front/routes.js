@@ -1,4 +1,5 @@
-var map = L.map("map").setView([40.519365, -3.894206], 14.5);
+// configs
+var map = L.map("map").setView([40.519365, -3.894206], 14.2);
 L.tileLayer(
   "https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}",
   {
@@ -13,8 +14,8 @@ L.tileLayer(
   }
 ).addTo(map);
 
+// routes
 var latlngs;
-
 latlngs = [
   [40.519163, -3.887558],
   [40.5187906, -3.886666599999999],
@@ -55,7 +56,7 @@ latlngs = [
   [40.519163, -3.887558],
 ];
 
-var polyline = L.polyline(latlngs, { color: "red" }).addTo(map);
+var polyline = L.polyline(latlngs, { color: "#cc241d" }).addTo(map);
 
 latlngs = [
   [40.526405, -3.893652],
@@ -76,7 +77,7 @@ latlngs = [
   [40.526405, -3.893652],
 ];
 
-var polyline3 = L.polyline(latlngs, { color: "blue" }).addTo(map);
+var polyline3 = L.polyline(latlngs, { color: "#b16286" }).addTo(map);
 
 latlngs = [
   [40.520566, -3.909616],
@@ -91,26 +92,49 @@ latlngs = [
   [40.520566, -3.909616],
 ];
 
-var polyline3 = L.polyline(latlngs, { color: "yellow" }).addTo(map);
+var polyline3 = L.polyline(latlngs, { color: "#d79921" }).addTo(map);
 
-var marker = L.marker([40.520566, -3.909616]).addTo(map);
-marker.bindPopup("<b>Hola!</b><br>Soy un camionero.");
+// cubos
+var iconBasura = L.icon({
+  iconUrl: "./img/cubo.png",
+  iconSize: [20, 20],
+});
+fetch("../data/locations.json")
+  .then((response) => response.json())
+  .then((jsondata) => {
+    jsondata.map((cubo) => {
+      console.log(cubo);
+      L.marker([cubo.lat, cubo.lng], { icon: iconBasura }).addTo(map);
+    });
+  });
 
-var marker2 = L.marker([40.526405, -3.893652]).addTo(map);
-marker2.bindPopup("<b>Hola!</b><br>Soy un camionero.");
+// camiones
+var iconCamion = L.icon({
+  iconUrl: "./img/camion.png",
+  iconSize: [40, 40],
+});
+fetch("../data/drivers.json")
+  .then((response) => response.json())
+  .then((jsondata) => {
+    jsondata.map((c) => {
+      console.log(c);
+      L.marker([c.lat, c.lng], { icon: iconCamion }).addTo(map);
+    });
+  });
 
-var marker3 = L.marker([40.519163, -3.887558]).addTo(map);
-marker3.bindPopup("<b>Hola!</b><br>Soy un camionero.");
+// hp
+var iconHP = L.icon({
+  iconUrl: "./img/camion.png",
+  iconSize: [40, 40],
+});
+L.marker([40.516317, -3.895065], { icon: iconHP }).addTo(map);
 
-// map.fitBounds(polyline.getBounds());
-//
+// show coords onClick
 var popup = L.popup();
-
 function onMapClick(e) {
   popup
     .setLatLng(e.latlng)
     .setContent("You clicked the map at " + e.latlng.toString())
     .openOn(map);
 }
-
 map.on("click", onMapClick);
