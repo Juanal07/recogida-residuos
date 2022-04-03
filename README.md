@@ -64,6 +64,6 @@ disminuyendo los recorridos de los camiones y tiempo de recogida y todo con una 
 
 7. Modificar drivers.json o locations.json para variar su ubicación o carga simulando
    los datos de los sensores. De esta forma al ejecutar
-   el programa se recalcularan las rutas.
+   el programa se recalcularan las rutas y se podrá ver refrescando la web.
 
 > `python main.py`

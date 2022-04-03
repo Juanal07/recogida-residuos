@@ -35,7 +35,6 @@ fetch("../data/locations.json")
   .then((response) => response.json())
   .then((jsondata) => {
     jsondata.map((cubo) => {
-      console.log(cubo);
       L.marker([cubo.lat, cubo.lng], { icon: iconBasura }).addTo(map);
     });
   });
@@ -49,7 +48,6 @@ fetch("../data/drivers.json")
   .then((response) => response.json())
   .then((jsondata) => {
     jsondata.map((c) => {
-      console.log(c);
       L.marker([c.lat, c.lng], { icon: iconCamion }).addTo(map);
     });
   });
