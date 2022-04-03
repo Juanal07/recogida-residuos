@@ -40,7 +40,7 @@ disminuyendo los recorridos de los camiones y tiempo de recogida y todo con una 
 
 ### Algoritmo optimización
 
-1. Necesario python 3.9 y pip
+1. Necesario python 3.8 y pip
 
 2. Recomendable instalar herramienta virtualenv
 

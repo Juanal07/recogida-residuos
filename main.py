@@ -11,7 +11,7 @@ api_key = os.getenv("api_key")
 
 global api
 api = False
-# api = True
+api = True
 
 
 def create_model(df_drivers, df_locations):
