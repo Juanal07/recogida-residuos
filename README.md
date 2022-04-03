@@ -42,13 +42,13 @@ disminuyendo los recorridos de los camiones y tiempo de recogida y todo con una 
 
 1. Necesario python 3.9 y pip
 
-2. Recomendable crear virtual enviroment
-
-> `virtualenv venv`
-
-3. Instalar herramienta virtualenv
+2. Recomendable instalar herramienta virtualenv
 
 > `pip install virtualenv`
+
+3. Crear virtual enviroment
+
+> `virtualenv venv`
 
 4. Acceder al virtual enviroment (Unix)
 

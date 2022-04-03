@@ -179,17 +179,12 @@ def get_full_route(data, manager, routing, solution, df_drivers):
         pd.DataFrame(all_routes).to_csv(
             "./output/route_points.csv", header=None, index=False
         )
-        # rutos to json file
+        # rutas to json file
         rutas = []
-        # print(all_routes)
         for route in all_routes:
-            # print(route)
             ruta = []
             for coord in route:
-                # print(coord)
                 if type(coord) != float:
-                    # print(type(coord))
-                    # print(eval(coord))
                     c = {"lat": coord[0], "lng": coord[1]}
                     ruta.append(c)
             rutas.append(ruta)
