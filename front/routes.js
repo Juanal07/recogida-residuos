@@ -1,4 +1,5 @@
 // configs
+//
 var map = L.map("map").setView([40.519365, -3.894206], 14.2);
 L.tileLayer(
   "https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}",
@@ -21,7 +22,13 @@ fetch("../output/route_points.json")
   .then((response) => response.json())
   .then((jsondata) => {
     jsondata.map((route) => {
-      L.polyline(route, { color: colors[i % 3] }).addTo(map);
+      L.polyline(route, { color: colors[i % 3] })
+        .arrowheads({
+          frequency: "50px",
+          size: "8px",
+          offsets: { end: "15px" },
+        })
+        .addTo(map);
       i++;
     });
   });

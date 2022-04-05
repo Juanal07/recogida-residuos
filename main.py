@@ -10,7 +10,7 @@ load_dotenv()
 api_key = os.getenv("api_key")
 
 global api
-api = False
+# api = False
 api = True
 
 
