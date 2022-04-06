@@ -67,3 +67,5 @@ disminuyendo los recorridos de los camiones y tiempo de recogida y todo con una 
    el programa se recalcularan las rutas y se podrá ver refrescando la web.
 
 > `python main.py`
+
+**Nota:** En el zip entregado se incluye un archivo .env con la api_key de google para obtener las distancias entre los puntos.
